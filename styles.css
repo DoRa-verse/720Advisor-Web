@@ -572,7 +572,7 @@ h2 {
   }
 
   .draw-panel {
-    padding: 18px;
+    padding: 16px;
   }
 
   .draw-title h2 {
@@ -581,17 +581,19 @@ h2 {
 
   .draw-ball {
     border-width: 4px;
-    font-size: 20px;
-    height: 46px;
-    width: 46px;
+    font-size: clamp(16px, 5vw, 20px);
+    height: clamp(34px, 10vw, 46px);
+    width: clamp(34px, 10vw, 46px);
   }
 
   .number-line {
-    grid-template-columns: 46px 32px repeat(6, 46px);
+    gap: clamp(4px, 1.4vw, 8px);
+    grid-template-columns: clamp(34px, 10vw, 46px) 28px repeat(6, clamp(34px, 10vw, 46px));
+    justify-content: start;
   }
 
   .draw-spacer {
-    height: 46px;
-    width: 46px;
+    height: clamp(34px, 10vw, 46px);
+    width: clamp(34px, 10vw, 46px);
   }
 }

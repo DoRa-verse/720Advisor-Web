@@ -56,7 +56,6 @@ const mixPlan = document.querySelector("#mixPlan");
 const updateData = document.querySelector("#updateData");
 const refreshAll = document.querySelector("#refreshAll");
 const mixAdvice = document.querySelector("#mixAdvice");
-const digitTable = document.querySelector("#digitTable");
 
 function emptyStats() {
   return {

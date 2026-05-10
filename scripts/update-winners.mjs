@@ -6,6 +6,18 @@ const MOBILE_OFFICIAL_URL = "https://m.dhlottery.co.kr/gameResult.do?method=win7
 const PYONY_URL = "https://pyony.com/lotto720/rounds";
 const FETCH_TIMEOUT_MS = 8000;
 
+function sameRound(a, b) {
+  return Boolean(
+    a &&
+    b &&
+    a.round === b.round &&
+    a.group === b.group &&
+    JSON.stringify(a.digits) === JSON.stringify(b.digits) &&
+    JSON.stringify(a.bonus) === JSON.stringify(b.bonus) &&
+    (a.drawDate || null) === (b.drawDate || null)
+  );
+}
+
 function decodeHtml(value) {
   return value
     .replace(/&nbsp;/g, " ")
@@ -97,17 +109,19 @@ async function main() {
   const rounds = Array.isArray(existing.rounds) ? existing.rounds : [];
   const byRound = new Map(rounds.map((item) => [item.round, item]));
   const cachedMax = Math.max(0, ...rounds.map((item) => item.round || 0));
+  const cachedLatest = byRound.get(cachedMax);
   const latest = await fetchRound();
 
   if (!latest) throw new Error("Latest lottery result could not be parsed.");
-  if (latest.round <= cachedMax && isCompleteThrough(rounds, cachedMax)) {
+  byRound.set(latest.round, latest);
+
+  if (latest.round <= cachedMax && isCompleteThrough(rounds, cachedMax) && sameRound(latest, cachedLatest)) {
     console.log(`Already up to date: ${cachedMax} rounds cached.`);
     return;
   }
 
   const startRound = isCompleteThrough(rounds, cachedMax) ? cachedMax + 1 : 1;
   const endRound = Math.max(latest.round, cachedMax);
-  byRound.set(latest.round, latest);
 
   for (let round = startRound; round <= endRound; round += 1) {
     if (byRound.has(round)) continue;
