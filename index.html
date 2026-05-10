@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>연금복권720+ 통계 추천기</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Pension Lottery 720+</p>
+          <h1>연금복권720+ 통계 추천기</h1>
+          <p class="disclaimer">최근 당첨 흐름을 참고해 다섯 가지 방식으로 번호를 뽑아봅니다.</p>
+        </div>
+        <div class="actions">
+          <button id="updateData" class="primary" title="웹 배포 데이터 파일을 다시 읽습니다.">데이터 새로고침</button>
+          <button id="refreshAll">5가지 다시 추천</button>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="통계 요약">
+        <article>
+          <span>통계 데이터</span>
+          <strong id="roundCount">-</strong>
+        </article>
+        <article>
+          <span>최신 회차</span>
+          <strong id="latestRound">-</strong>
+        </article>
+        <article>
+          <span>마지막 업데이트</span>
+          <strong id="updatedAt">-</strong>
+        </article>
+      </section>
+
+      <p id="dataStatus" class="data-status" role="status"></p>
+
+      <section class="draw-panel" aria-label="최근 추첨 결과">
+        <div class="draw-title">
+          <div>
+            <h2 id="drawTitle">최근 추첨 결과</h2>
+            <p id="drawDate">통계 업데이트 후 표시됩니다.</p>
+          </div>
+        </div>
+        <div class="draw-results">
+          <div class="prize-label">
+            <strong>1등</strong>
+            <span>월 700만원 × 20년</span>
+          </div>
+          <div id="firstPrize" class="number-line"></div>
+          <div class="prize-label">
+            <strong>보너스</strong>
+            <span>월 100만원 × 10년</span>
+          </div>
+          <div id="bonusPrize" class="number-line"></div>
+        </div>
+      </section>
+
+      <section id="cards" class="cards" aria-live="polite"></section>
+
+      <section class="panel">
+        <div>
+          <h2>5장 살 때 섞는 법</h2>
+          <p id="mixAdvice">통계를 불러오는 중입니다.</p>
+        </div>
+        <div id="mixPlan" class="mix-plan"></div>
+      </section>
+    </main>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
