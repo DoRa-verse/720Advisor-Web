@@ -1,10 +1,11 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { appendFile, readFile, writeFile } from "node:fs/promises";
 
 const DATA_FILE = new URL("../data/winners.json", import.meta.url);
 const OFFICIAL_URL = "https://www.dhlottery.co.kr/gameResult.do?method=win720";
 const MOBILE_OFFICIAL_URL = "https://m.dhlottery.co.kr/gameResult.do?method=win720";
 const PYONY_URL = "https://pyony.com/lotto720/rounds";
 const FETCH_TIMEOUT_MS = 8000;
+const MAX_FETCH_ATTEMPTS = 3;
 
 function sameRound(a, b) {
   return Boolean(
@@ -104,19 +105,40 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function fetchRoundReliable(round = null) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt += 1) {
+    try {
+      return await fetchRound(round);
+    } catch (error) {
+      lastError = error;
+      if (attempt < MAX_FETCH_ATTEMPTS) {
+        await sleep(1000 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function writeSummary(message) {
+  if (!process.env.GITHUB_STEP_SUMMARY) return;
+  await appendFile(process.env.GITHUB_STEP_SUMMARY, `${message}\n`, "utf8");
+}
+
 async function main() {
   const existing = JSON.parse(await readFile(DATA_FILE, "utf8"));
   const rounds = Array.isArray(existing.rounds) ? existing.rounds : [];
   const byRound = new Map(rounds.map((item) => [item.round, item]));
   const cachedMax = Math.max(0, ...rounds.map((item) => item.round || 0));
   const cachedLatest = byRound.get(cachedMax);
-  const latest = await fetchRound();
+  const latest = await fetchRoundReliable();
 
   if (!latest) throw new Error("Latest lottery result could not be parsed.");
   byRound.set(latest.round, latest);
 
   if (latest.round <= cachedMax && isCompleteThrough(rounds, cachedMax) && sameRound(latest, cachedLatest)) {
     console.log(`Already up to date: ${cachedMax} rounds cached.`);
+    await writeSummary(`### Lottery data\n\nAlready up to date: ${cachedMax} rounds cached.`);
     return;
   }
 
@@ -125,7 +147,7 @@ async function main() {
 
   for (let round = startRound; round <= endRound; round += 1) {
     if (byRound.has(round)) continue;
-    const parsed = await fetchRound(round);
+    const parsed = await fetchRoundReliable(round);
     if (parsed) byRound.set(parsed.round, parsed);
     await sleep(250);
   }
@@ -135,6 +157,11 @@ async function main() {
     .sort((a, b) => a.round - b.round)
     .map(({ round, group, digits, bonus, drawDate }) => ({ round, group, digits, bonus, drawDate }));
 
+  const maxRound = Math.max(0, ...nextRounds.map((item) => item.round || 0));
+  if (!isCompleteThrough(nextRounds, maxRound)) {
+    throw new Error(`Refusing to write incomplete lottery data through round ${maxRound}.`);
+  }
+
   const payload = {
     updatedAt: new Date().toISOString(),
     source: OFFICIAL_URL,
@@ -143,6 +170,7 @@ async function main() {
 
   await writeFile(DATA_FILE, `${JSON.stringify(payload)}\n`, "utf8");
   console.log(`Updated winners.json: ${nextRounds.length} rounds cached.`);
+  await writeSummary(`### Lottery data\n\nUpdated winners.json: ${nextRounds.length} rounds cached. Latest round: ${maxRound}.`);
 }
 
 main().catch((error) => {

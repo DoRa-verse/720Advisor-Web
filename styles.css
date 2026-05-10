@@ -143,6 +143,11 @@ h2 {
   font-weight: 800;
 }
 
+.data-status.warning {
+  color: #b45309;
+  font-weight: 800;
+}
+
 .cards {
   display: grid;
   gap: 14px;

@@ -390,20 +390,40 @@ function renderMixPlan(items) {
 function renderMeta() {
   const rounds = state.data.rounds || [];
   const latest = rounds.length ? rounds.reduce((best, round) => round.round > best.round ? round : best, rounds[0]) : null;
+  const staleInfo = latest ? getStaleInfo(latest) : null;
   roundCount.textContent = rounds.length ? `${rounds.length.toLocaleString("ko-KR")}회차 수집` : "수집 필요";
   latestRound.textContent = latest ? `${latest.round}회` : "-";
   updatedAt.textContent = rounds.length && state.data.updatedAt ? new Date(state.data.updatedAt).toLocaleString("ko-KR") : "업데이트 필요";
   dataStatus.classList.toggle("error", Boolean(state.data.updateError));
+  dataStatus.classList.toggle("warning", Boolean(!state.data.updateError && staleInfo?.stale));
   if (state.data.updateError) {
     dataStatus.textContent = `업데이트 실패: ${state.data.updateError}`;
   } else if (state.data.updateSkipped) {
     dataStatus.textContent = `${state.data.updateMessage} 다음 업데이트 권장 시점: ${formatDateTime(state.data.nextUpdateAt)}`;
+  } else if (staleInfo?.stale) {
+    dataStatus.textContent = `${latest.round}회 추첨일로부터 ${staleInfo.days}일 지났습니다. 자동 업데이트 상태를 확인해 주세요.`;
   } else if (latest) {
     dataStatus.textContent = "연금복권 당첨번호 데이터 기준으로 표시 중입니다.";
   } else {
     dataStatus.textContent = rounds.length ? "수집된 당첨번호 데이터 기준으로 표시 중입니다." : "";
   }
   renderLatestDraw(latest);
+}
+
+function parseDrawDate(value) {
+  if (!value) return null;
+  const korean = value.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+  const dotted = value.match(/(\d{4})\.(\d{1,2})\.(\d{1,2})/);
+  const match = korean || dotted;
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, 0, 0);
+}
+
+function getStaleInfo(latest) {
+  const drawDate = parseDrawDate(latest.drawDate);
+  if (!drawDate) return null;
+  const days = Math.floor((Date.now() - drawDate.getTime()) / (24 * 60 * 60 * 1000));
+  return { days, stale: days >= 9 };
 }
 
 function formatDateTime(value) {
