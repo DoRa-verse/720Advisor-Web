@@ -3,7 +3,10 @@ name: Update lottery data
 on:
   workflow_dispatch:
   schedule:
+    # Every Thursday 22:30 KST, after the weekly draw result is usually available.
     - cron: "30 13 * * 4"
+    # Backup retry every Friday 06:00 KST in case the result page was delayed.
+    - cron: "0 21 * * 4"
 
 permissions:
   contents: write
