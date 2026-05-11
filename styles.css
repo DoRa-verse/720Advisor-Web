@@ -580,25 +580,60 @@ h2 {
     padding: 16px;
   }
 
+  .draw-results {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 1fr;
+  }
+
+  .prize-label {
+    align-items: baseline;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 82px 1fr;
+  }
+
+  .prize-label strong {
+    font-size: 22px;
+    white-space: nowrap;
+  }
+
+  .prize-label span {
+    font-size: 20px;
+    white-space: nowrap;
+  }
+
   .draw-title h2 {
     font-size: 22px;
   }
 
   .draw-ball {
+    aspect-ratio: 1;
     border-width: 4px;
-    font-size: clamp(16px, 5vw, 20px);
-    height: clamp(34px, 10vw, 46px);
-    width: clamp(34px, 10vw, 46px);
+    font-size: clamp(15px, 4.8vw, 20px);
+    height: auto;
+    width: 100%;
   }
 
   .number-line {
-    gap: clamp(4px, 1.4vw, 8px);
-    grid-template-columns: clamp(34px, 10vw, 46px) 28px repeat(6, clamp(34px, 10vw, 46px));
-    justify-content: start;
+    gap: clamp(4px, 1.2vw, 7px);
+    grid-column: auto;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    min-height: 0;
+    width: 100%;
   }
 
   .draw-spacer {
-    height: clamp(34px, 10vw, 46px);
-    width: clamp(34px, 10vw, 46px);
+    aspect-ratio: 1;
+    display: block;
+    width: 100%;
+  }
+
+  .group-text {
+    align-self: center;
+    font-size: 15px;
+    justify-self: center;
+    line-height: 1.1;
+    white-space: nowrap;
   }
 }
