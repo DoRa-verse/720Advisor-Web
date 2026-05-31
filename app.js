@@ -409,6 +409,49 @@ function countAt(map, digit) {
   return Number(map?.[digit] || 0);
 }
 
+function buildDistribution(rounds, maxValue, getter) {
+  const distribution = Array.from({ length: maxValue + 1 }, () => 0);
+  rounds.forEach((round) => {
+    const value = getter(round.digits);
+    if (Number.isFinite(value) && value >= 0 && value <= maxValue) {
+      distribution[value] += 1;
+    }
+  });
+  return distribution;
+}
+
+function distributionShare(distribution, value) {
+  const max = Math.max(1, ...distribution);
+  return (Number(distribution[value] || 0) + 1) / (max + 1);
+}
+
+function winnerProfileScore(digits, rounds, stats) {
+  if (!rounds.length) return 50;
+  const total = digits.reduce((sum, digit) => sum + digit, 0);
+  const oddCount = digits.filter((digit) => digit % 2).length;
+  const lowCount = digits.filter((digit) => digit <= 4).length;
+  const repeats = 6 - new Set(digits).size;
+  const spread = Math.max(...digits) - Math.min(...digits);
+  const sumDistribution = buildDistribution(rounds, 54, (items) => items.reduce((sum, digit) => sum + digit, 0));
+  const oddDistribution = buildDistribution(rounds, 6, (items) => items.filter((digit) => digit % 2).length);
+  const lowDistribution = buildDistribution(rounds, 6, (items) => items.filter((digit) => digit <= 4).length);
+  const repeatDistribution = buildDistribution(rounds, 5, (items) => 6 - new Set(items).size);
+  const spreadDistribution = buildDistribution(rounds, 9, (items) => Math.max(...items) - Math.min(...items));
+  const positionFit = digits.reduce((sum, digit, position) => {
+    const values = stats.positions[position] || [];
+    return sum + (countAt(values, digit) + 1) / (Math.max(1, ...values) + 1);
+  }, 0) / digits.length;
+  const fit =
+    distributionShare(sumDistribution, total) * 0.24 +
+    distributionShare(oddDistribution, oddCount) * 0.16 +
+    distributionShare(lowDistribution, lowCount) * 0.14 +
+    distributionShare(repeatDistribution, repeats) * 0.18 +
+    distributionShare(spreadDistribution, spread) * 0.14 +
+    positionFit * 0.14;
+
+  return Math.max(3, Math.min(99, Math.round(30 + fit * 64)));
+}
+
 function buildPositionStats(digits, stats) {
   return digits.map((digit, index) => ({
     index: index + 1,
@@ -477,11 +520,8 @@ function analyzeDigits(digits) {
   const unique = new Set(digits).size;
   const repeats = 6 - unique;
   const spread = Math.max(...digits) - Math.min(...digits);
-  const digitRanks = digits.map((digit, position) => rankValue(stats.positions[position], digit));
-  const rankAverage = digitRanks.reduce((sum, value) => sum + value, 0) / digitRanks.length;
   const frequencyAverage = digits.reduce((sum, digit, position) => sum + frequencyShare(stats.positions[position], digit), 0) / digits.length;
-  const balanceBonus = 12 - Math.abs(total - 27) * 0.7 - Math.abs(oddCount - 3) * 3 + Math.min(unique, 5) * 1.5;
-  const baseExpectation = Math.max(3, Math.min(99, Math.round(rankAverage * 72 + balanceBonus)));
+  const baseExpectation = winnerProfileScore(digits, rounds, stats);
   const exactFirstHits = rounds.filter((round) => round.digits?.join("") === digits.join(""));
   const exactBonusHits = rounds.filter((round) => round.bonus?.join("") === digits.join(""));
   const tailHits = rounds.filter((round) => round.digits?.slice(4).join("") === digits.slice(4).join(""));
@@ -557,7 +597,7 @@ function renderAnalysis() {
     <dl class="analysis-details">
       <div><dt>번호 패턴</dt><dd>${result.descriptors}</dd></div>
       <div><dt>역대 동일 6자리</dt><dd>1등 ${result.exactFirstHits.length}회, 보너스 ${result.exactBonusHits.length}회</dd></div>
-      ${result.expectation !== result.baseExpectation ? `<div><dt>이력 보정</dt><dd>기본 패턴 ${result.baseExpectation}%에서 과거 당첨 이력을 반영했습니다.</dd></div>` : ""}
+      ${result.expectation !== result.baseExpectation ? `<div><dt>이력 보정</dt><dd>당첨번호 닮음 ${result.baseExpectation}%에서 과거 당첨 이력을 반영했습니다.</dd></div>` : ""}
       <div><dt>끝 두 자리 흐름</dt><dd>${result.tailHits.length}회 출현, 자리별 평균 빈도 ${(result.frequencyAverage * 100).toFixed(1)}%</dd></div>
     </dl>
     <div class="analysis-section">
