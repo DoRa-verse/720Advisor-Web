@@ -61,6 +61,7 @@ const analysisPreview = document.querySelector("#analysisPreview");
 const analyzeNumber = document.querySelector("#analyzeNumber");
 const clearAnalysis = document.querySelector("#clearAnalysis");
 const analysisResult = document.querySelector("#analysisResult");
+const numberAnalyzer = document.querySelector(".number-analyzer");
 
 function emptyStats() {
   return {
@@ -524,6 +525,7 @@ function analyzeDigits(digits) {
 function renderAnalysis() {
   const digits = getAnalysisDigits();
   renderAnalysisPreview(digits);
+  numberAnalyzer?.classList.toggle("has-analysis", Boolean(digits && state.stats.count));
   if (!digits) {
     analysisResult.innerHTML = "<p>분석할 숫자 6개를 입력해 주세요.</p>";
     return;
