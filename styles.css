@@ -476,6 +476,125 @@ h2 {
   margin-top: 4px;
 }
 
+.number-analyzer {
+  align-items: start;
+}
+
+.analyzer-box {
+  display: grid;
+  gap: 12px;
+}
+
+.analysis-inputs {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(6, minmax(42px, 1fr));
+}
+
+.analysis-inputs input {
+  aspect-ratio: 1;
+  background: #eef4f1;
+  border: 1px solid #d6e6df;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 24px;
+  font-weight: 900;
+  min-width: 0;
+  text-align: center;
+}
+
+.analysis-inputs input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+  outline: none;
+}
+
+.analysis-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.analysis-actions button {
+  flex: 1;
+}
+
+.analysis-result {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.analysis-result p {
+  margin-bottom: 0;
+}
+
+.analysis-summary {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.analysis-summary div {
+  background: #f3f6f3;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.analysis-summary span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.analysis-summary strong {
+  color: var(--accent-strong);
+  display: block;
+  font-size: 22px;
+}
+
+.analysis-meter {
+  border-radius: 999px;
+  height: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.analysis-advice {
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.analysis-details {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.analysis-details div {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 110px 1fr;
+}
+
+.analysis-details dt {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.analysis-details dd {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
 .digit-row {
   align-items: center;
   display: grid;
@@ -635,5 +754,23 @@ h2 {
     justify-self: center;
     line-height: 1.1;
     white-space: nowrap;
+  }
+
+  .analysis-inputs {
+    gap: 6px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .analysis-inputs input {
+    font-size: 20px;
+  }
+
+  .analysis-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-details div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 }

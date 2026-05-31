@@ -60,6 +60,30 @@
 
       <section id="cards" class="cards" aria-live="polite"></section>
 
+      <section class="panel number-analyzer" aria-label="내 번호 분석">
+        <div>
+          <h2>내 번호 분석</h2>
+          <p>조를 제외한 숫자 6개를 입력하면 수집된 당첨번호 기준으로 흐름과 패턴을 간단히 분석합니다.</p>
+        </div>
+        <div class="analyzer-box">
+          <div id="analysisInputs" class="analysis-inputs" aria-label="분석할 숫자 6자리">
+            <input aria-label="첫 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+            <input aria-label="두 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+            <input aria-label="세 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+            <input aria-label="네 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+            <input aria-label="다섯 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+            <input aria-label="여섯 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+          </div>
+          <div class="analysis-actions">
+            <button id="analyzeNumber" class="primary">분석하기</button>
+            <button id="clearAnalysis">지우기</button>
+          </div>
+          <div id="analysisResult" class="analysis-result" aria-live="polite">
+            <p>분석할 숫자 6개를 입력해 주세요.</p>
+          </div>
+        </div>
+      </section>
+
       <section class="panel">
         <div>
           <h2>5장 살 때 섞는 법</h2>

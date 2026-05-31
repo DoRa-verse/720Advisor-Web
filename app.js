@@ -56,6 +56,10 @@ const mixPlan = document.querySelector("#mixPlan");
 const updateData = document.querySelector("#updateData");
 const refreshAll = document.querySelector("#refreshAll");
 const mixAdvice = document.querySelector("#mixAdvice");
+const analysisInputs = Array.from(document.querySelectorAll("#analysisInputs input"));
+const analyzeNumber = document.querySelector("#analyzeNumber");
+const clearAnalysis = document.querySelector("#clearAnalysis");
+const analysisResult = document.querySelector("#analysisResult");
 
 function emptyStats() {
   return {
@@ -159,6 +163,11 @@ function rankValue(values, selectedIndex, reverse = false) {
   const rank = sorted.findIndex((item) => item.index === selectedIndex);
   if (rank < 0) return 0.5;
   return 1 - rank / Math.max(1, sorted.length - 1);
+}
+
+function frequencyShare(values, selectedIndex) {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return total ? values[selectedIndex] / total : 0;
 }
 
 function isTooPlain(digits) {
@@ -387,6 +396,88 @@ function renderMixPlan(items) {
   `;
 }
 
+function getAnalysisDigits() {
+  const values = analysisInputs.map((input) => input.value.trim());
+  if (values.some((value) => !/^\d$/.test(value))) return null;
+  return values.map(Number);
+}
+
+function analyzeDigits(digits) {
+  const stats = state.stats;
+  const rounds = state.data.rounds || [];
+  const oddCount = digits.filter((digit) => digit % 2).length;
+  const lowCount = digits.filter((digit) => digit <= 4).length;
+  const total = digits.reduce((sum, digit) => sum + digit, 0);
+  const unique = new Set(digits).size;
+  const repeats = 6 - unique;
+  const spread = Math.max(...digits) - Math.min(...digits);
+  const digitRanks = digits.map((digit, position) => rankValue(stats.positions[position], digit));
+  const rankAverage = digitRanks.reduce((sum, value) => sum + value, 0) / digitRanks.length;
+  const frequencyAverage = digits.reduce((sum, digit, position) => sum + frequencyShare(stats.positions[position], digit), 0) / digits.length;
+  const balanceBonus = 12 - Math.abs(total - 27) * 0.7 - Math.abs(oddCount - 3) * 3 + Math.min(unique, 5) * 1.5;
+  const expectation = Math.max(3, Math.min(99, Math.round(rankAverage * 72 + balanceBonus)));
+  const exactFirstHits = rounds.filter((round) => round.digits?.join("") === digits.join(""));
+  const exactBonusHits = rounds.filter((round) => round.bonus?.join("") === digits.join(""));
+  const tailHits = rounds.filter((round) => round.digits?.slice(4).join("") === digits.slice(4).join(""));
+  const sumBand = total < 20 ? "저합" : total > 34 ? "고합" : "중간합";
+  const repeatLabel = repeats === 0 ? "반복 없음" : repeats <= 2 ? "반복 적정" : "반복 많음";
+  const spreadLabel = spread >= 7 ? "분산 넓음" : spread >= 5 ? "분산 보통" : "분산 좁음";
+  const advice =
+    expectation >= 75
+      ? "통계 흐름과 패턴 균형이 좋은 편입니다. 같은 번호로 계속 구매해도 무난하지만, 실제 확률은 변하지 않습니다."
+      : expectation >= 55
+        ? "무난한 번호입니다. 계속 가져가도 되고, 가끔 다른 방식 추천과 섞어도 좋습니다."
+        : "통계 기준 매력은 약한 편입니다. 계속 고집하기보다는 다른 후보와 섞는 쪽이 더 가볍습니다.";
+
+  return {
+    expectation,
+    exactFirstHits,
+    exactBonusHits,
+    tailHits,
+    frequencyAverage,
+    descriptors: `홀짝 ${oddCount}:${6 - oddCount}, 저고 ${lowCount}:${6 - lowCount}, ${sumBand} ${total}, ${spreadLabel}, ${repeatLabel}`,
+    advice
+  };
+}
+
+function renderAnalysis() {
+  const digits = getAnalysisDigits();
+  if (!digits) {
+    analysisResult.innerHTML = "<p>분석할 숫자 6개를 입력해 주세요.</p>";
+    return;
+  }
+
+  if (!state.stats.count) {
+    analysisResult.innerHTML = "<p>통계 데이터를 불러온 뒤 분석할 수 있습니다.</p>";
+    return;
+  }
+
+  const result = analyzeDigits(digits);
+  analysisResult.innerHTML = `
+    <div class="analysis-summary">
+      <div>
+        <span>당첨 기대감</span>
+        <strong>${result.expectation}%</strong>
+      </div>
+      <div>
+        <span>실제 1등 확률</span>
+        <strong>1 / 5,000,000</strong>
+      </div>
+      <div>
+        <span>조 제외 6자리</span>
+        <strong>약 1 / 1,000,000</strong>
+      </div>
+    </div>
+    <div class="meter analysis-meter"><div class="meter-fill" style="width: ${result.expectation}%"></div></div>
+    <p class="analysis-advice">${result.advice}</p>
+    <dl class="analysis-details">
+      <div><dt>번호 패턴</dt><dd>${result.descriptors}</dd></div>
+      <div><dt>역대 동일 6자리</dt><dd>1등 ${result.exactFirstHits.length}회, 보너스 ${result.exactBonusHits.length}회</dd></div>
+      <div><dt>끝 두 자리 흐름</dt><dd>${result.tailHits.length}회 출현, 자리별 평균 빈도 ${(result.frequencyAverage * 100).toFixed(1)}%</dd></div>
+    </dl>
+  `;
+}
+
 function renderMeta() {
   const rounds = state.data.rounds || [];
   const latest = rounds.length ? rounds.reduce((best, round) => round.round > best.round ? round : best, rounds[0]) : null;
@@ -471,6 +562,7 @@ async function loadStats(forceUpdate = false, options = {}) {
   state.stats = buildStats(state.data.rounds || []);
   renderMeta();
   renderAdvice();
+  renderAnalysis();
   if (refreshRecommendations) refreshEveryStrategy();
 }
 
@@ -492,6 +584,28 @@ updateData.addEventListener("click", async () => {
 });
 
 refreshAll.addEventListener("click", refreshEveryStrategy);
+analyzeNumber.addEventListener("click", renderAnalysis);
+clearAnalysis.addEventListener("click", () => {
+  analysisInputs.forEach((input) => {
+    input.value = "";
+  });
+  renderAnalysis();
+  analysisInputs[0]?.focus();
+});
+analysisInputs.forEach((input, index) => {
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D/g, "").slice(0, 1);
+    if (input.value && index < analysisInputs.length - 1) {
+      analysisInputs[index + 1].focus();
+    }
+    renderAnalysis();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Backspace" && !input.value && index > 0) {
+      analysisInputs[index - 1].focus();
+    }
+  });
+});
 
 renderMeta();
 refreshEveryStrategy();
