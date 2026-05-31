@@ -480,17 +480,28 @@ function analyzeDigits(digits) {
   const rankAverage = digitRanks.reduce((sum, value) => sum + value, 0) / digitRanks.length;
   const frequencyAverage = digits.reduce((sum, digit, position) => sum + frequencyShare(stats.positions[position], digit), 0) / digits.length;
   const balanceBonus = 12 - Math.abs(total - 27) * 0.7 - Math.abs(oddCount - 3) * 3 + Math.min(unique, 5) * 1.5;
-  const expectation = Math.max(3, Math.min(99, Math.round(rankAverage * 72 + balanceBonus)));
+  const baseExpectation = Math.max(3, Math.min(99, Math.round(rankAverage * 72 + balanceBonus)));
   const exactFirstHits = rounds.filter((round) => round.digits?.join("") === digits.join(""));
   const exactBonusHits = rounds.filter((round) => round.bonus?.join("") === digits.join(""));
   const tailHits = rounds.filter((round) => round.digits?.slice(4).join("") === digits.slice(4).join(""));
   const positionStats = buildPositionStats(digits, stats);
   const hitRecords = buildHitRecords(exactFirstHits, exactBonusHits);
+  const hasFirstHistory = exactFirstHits.length > 0;
+  const hasBonusHistory = exactBonusHits.length > 0;
+  const expectation = hasFirstHistory
+    ? 100
+    : hasBonusHistory
+      ? Math.max(92, baseExpectation)
+      : baseExpectation;
   const sumBand = total < 20 ? "저합" : total > 34 ? "고합" : "중간합";
   const repeatLabel = repeats === 0 ? "반복 없음" : repeats <= 2 ? "반복 적정" : "반복 많음";
   const spreadLabel = spread >= 7 ? "분산 넓음" : spread >= 5 ? "분산 보통" : "분산 좁음";
   const advice =
-    expectation >= 75
+    hasFirstHistory
+      ? "역대 1등 번호 6자리와 일치한 기록이 있습니다. 과거 당첨 이력 기준으로는 가장 강한 신호지만, 앞으로의 실제 추첨 확률은 그대로입니다."
+      : hasBonusHistory
+        ? "역대 보너스 번호와 일치한 기록이 있습니다. 과거 당첨 이력이 있는 번호라 재미 지표를 높게 봅니다."
+        : expectation >= 75
       ? "통계 흐름과 패턴 균형이 좋은 편입니다. 같은 번호로 계속 구매해도 무난하지만, 실제 확률은 변하지 않습니다."
       : expectation >= 55
         ? "무난한 번호입니다. 계속 가져가도 되고, 가끔 다른 방식 추천과 섞어도 좋습니다."
@@ -498,6 +509,7 @@ function analyzeDigits(digits) {
 
   return {
     expectation,
+    baseExpectation,
     exactFirstHits,
     exactBonusHits,
     tailHits,
@@ -543,6 +555,7 @@ function renderAnalysis() {
     <dl class="analysis-details">
       <div><dt>번호 패턴</dt><dd>${result.descriptors}</dd></div>
       <div><dt>역대 동일 6자리</dt><dd>1등 ${result.exactFirstHits.length}회, 보너스 ${result.exactBonusHits.length}회</dd></div>
+      ${result.expectation !== result.baseExpectation ? `<div><dt>이력 보정</dt><dd>기본 패턴 ${result.baseExpectation}%에서 과거 당첨 이력을 반영했습니다.</dd></div>` : ""}
       <div><dt>끝 두 자리 흐름</dt><dd>${result.tailHits.length}회 출현, 자리별 평균 빈도 ${(result.frequencyAverage * 100).toFixed(1)}%</dd></div>
     </dl>
     <div class="analysis-section">
