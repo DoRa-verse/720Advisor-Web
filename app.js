@@ -449,7 +449,7 @@ function winnerProfileScore(digits, rounds, stats) {
     distributionShare(spreadDistribution, spread) * 0.14 +
     positionFit * 0.14;
 
-  return Math.max(3, Math.min(99, Math.round(45 + fit * 54)));
+  return Math.max(3, Math.min(89, Math.round(35 + fit * 58)));
 }
 
 function buildPositionStats(digits, stats) {
