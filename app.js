@@ -438,9 +438,15 @@ function buildHitRecords(firstHits, bonusHits) {
 function renderPositionStats(items) {
   return items.map((item) => `
     <div class="position-stat">
-      <strong>${item.index}번째 ${item.digit}</strong>
-      <span>1등 ${item.firstCount}회</span>
-      <span>보너스 ${item.bonusCount}회</span>
+      <div class="position-head">
+        <span>${item.index}</span>
+        <strong>번째 자리</strong>
+      </div>
+      <div class="position-digit">${item.digit}</div>
+      <div class="position-counts">
+        <span><em>1등</em><b>${item.firstCount}</b></span>
+        <span><em>보너스</em><b>${item.bonusCount}</b></span>
+      </div>
     </div>
   `).join("");
 }
@@ -540,7 +546,7 @@ function renderAnalysis() {
       <div><dt>끝 두 자리 흐름</dt><dd>${result.tailHits.length}회 출현, 자리별 평균 빈도 ${(result.frequencyAverage * 100).toFixed(1)}%</dd></div>
     </dl>
     <div class="analysis-section">
-      <h3>자릿수별 당첨 데이터</h3>
+      <h3>자릿수별 당첨 데이터 <span>같은 자리 기준</span></h3>
       <div class="position-stats">${renderPositionStats(result.positionStats)}</div>
     </div>
     <div class="analysis-section">
