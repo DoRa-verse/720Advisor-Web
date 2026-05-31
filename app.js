@@ -404,6 +404,63 @@ function getAnalysisDigits() {
   return value.split("").map(Number);
 }
 
+function countAt(map, digit) {
+  return Number(map?.[digit] || 0);
+}
+
+function buildPositionStats(digits, stats) {
+  return digits.map((digit, index) => ({
+    index: index + 1,
+    digit,
+    firstCount: countAt(stats.positions[index], digit),
+    bonusCount: countAt(stats.bonusPositions[index], digit)
+  }));
+}
+
+function buildHitRecords(firstHits, bonusHits) {
+  const records = [
+    ...firstHits.map((round) => ({
+      round: round.round,
+      drawDate: round.drawDate,
+      type: "1등 번호 6자리 일치",
+      detail: `${round.group}조 ${round.digits.join("")}`
+    })),
+    ...bonusHits.map((round) => ({
+      round: round.round,
+      drawDate: round.drawDate,
+      type: "보너스 번호 일치",
+      detail: `각조 ${round.bonus.join("")}`
+    }))
+  ];
+  return records.sort((a, b) => b.round - a.round);
+}
+
+function renderPositionStats(items) {
+  return items.map((item) => `
+    <div class="position-stat">
+      <strong>${item.index}번째 ${item.digit}</strong>
+      <span>1등 ${item.firstCount}회</span>
+      <span>보너스 ${item.bonusCount}회</span>
+    </div>
+  `).join("");
+}
+
+function renderHitRecords(records) {
+  if (!records.length) {
+    return "<p class=\"analysis-muted\">역대 1등/보너스 6자리와 완전히 일치한 기록은 아직 없습니다.</p>";
+  }
+  return `
+    <ul class="hit-records">
+      ${records.slice(0, 5).map((record) => `
+        <li>
+          <strong>${record.round}회 ${record.type}</strong>
+          <span>${record.detail}${record.drawDate ? ` · ${record.drawDate}` : ""}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
 function analyzeDigits(digits) {
   const stats = state.stats;
   const rounds = state.data.rounds || [];
@@ -421,6 +478,8 @@ function analyzeDigits(digits) {
   const exactFirstHits = rounds.filter((round) => round.digits?.join("") === digits.join(""));
   const exactBonusHits = rounds.filter((round) => round.bonus?.join("") === digits.join(""));
   const tailHits = rounds.filter((round) => round.digits?.slice(4).join("") === digits.slice(4).join(""));
+  const positionStats = buildPositionStats(digits, stats);
+  const hitRecords = buildHitRecords(exactFirstHits, exactBonusHits);
   const sumBand = total < 20 ? "저합" : total > 34 ? "고합" : "중간합";
   const repeatLabel = repeats === 0 ? "반복 없음" : repeats <= 2 ? "반복 적정" : "반복 많음";
   const spreadLabel = spread >= 7 ? "분산 넓음" : spread >= 5 ? "분산 보통" : "분산 좁음";
@@ -436,6 +495,8 @@ function analyzeDigits(digits) {
     exactFirstHits,
     exactBonusHits,
     tailHits,
+    positionStats,
+    hitRecords,
     frequencyAverage,
     descriptors: `홀짝 ${oddCount}:${6 - oddCount}, 저고 ${lowCount}:${6 - lowCount}, ${sumBand} ${total}, ${spreadLabel}, ${repeatLabel}`,
     advice
@@ -478,6 +539,15 @@ function renderAnalysis() {
       <div><dt>역대 동일 6자리</dt><dd>1등 ${result.exactFirstHits.length}회, 보너스 ${result.exactBonusHits.length}회</dd></div>
       <div><dt>끝 두 자리 흐름</dt><dd>${result.tailHits.length}회 출현, 자리별 평균 빈도 ${(result.frequencyAverage * 100).toFixed(1)}%</dd></div>
     </dl>
+    <div class="analysis-section">
+      <h3>자릿수별 당첨 데이터</h3>
+      <div class="position-stats">${renderPositionStats(result.positionStats)}</div>
+    </div>
+    <div class="analysis-section">
+      <h3>과거 동일 번호 기록</h3>
+      ${renderHitRecords(result.hitRecords)}
+    </div>
+    <p class="analysis-note">추천 카드의 기대감은 방식별 후보를 뽑을 때의 재미 점수이고, 내 번호 분석은 입력한 6자리만 고정해서 다시 평가합니다. 그래서 같은 번호도 수치가 다르게 보일 수 있습니다. 조 번호를 입력하지 않기 때문에 실제 1등 여부는 확정하지 않고, 1등 번호의 6자리 또는 보너스 번호와 일치했는지 확인합니다.</p>
   `;
 }
 
