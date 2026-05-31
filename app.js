@@ -56,7 +56,8 @@ const mixPlan = document.querySelector("#mixPlan");
 const updateData = document.querySelector("#updateData");
 const refreshAll = document.querySelector("#refreshAll");
 const mixAdvice = document.querySelector("#mixAdvice");
-const analysisInputs = Array.from(document.querySelectorAll("#analysisInputs input"));
+const analysisNumber = document.querySelector("#analysisNumber");
+const analysisPreview = document.querySelector("#analysisPreview");
 const analyzeNumber = document.querySelector("#analyzeNumber");
 const clearAnalysis = document.querySelector("#clearAnalysis");
 const analysisResult = document.querySelector("#analysisResult");
@@ -397,9 +398,10 @@ function renderMixPlan(items) {
 }
 
 function getAnalysisDigits() {
-  const values = analysisInputs.map((input) => input.value.trim());
-  if (values.some((value) => !/^\d$/.test(value))) return null;
-  return values.map(Number);
+  const value = (analysisNumber?.value || "").replace(/\D/g, "").slice(0, 6);
+  if (analysisNumber && analysisNumber.value !== value) analysisNumber.value = value;
+  if (value.length !== 6) return null;
+  return value.split("").map(Number);
 }
 
 function analyzeDigits(digits) {
@@ -442,6 +444,7 @@ function analyzeDigits(digits) {
 
 function renderAnalysis() {
   const digits = getAnalysisDigits();
+  renderAnalysisPreview(digits);
   if (!digits) {
     analysisResult.innerHTML = "<p>분석할 숫자 6개를 입력해 주세요.</p>";
     return;
@@ -476,6 +479,12 @@ function renderAnalysis() {
       <div><dt>끝 두 자리 흐름</dt><dd>${result.tailHits.length}회 출현, 자리별 평균 빈도 ${(result.frequencyAverage * 100).toFixed(1)}%</dd></div>
     </dl>
   `;
+}
+
+function renderAnalysisPreview(digits = null) {
+  const value = (analysisNumber?.value || "").replace(/\D/g, "").slice(0, 6);
+  const items = Array.from({ length: 6 }, (_, index) => value[index] ?? "");
+  analysisPreview.innerHTML = items.map((digit) => `<span class="analysis-token">${digit || "-"}</span>`).join("");
 }
 
 function renderMeta() {
@@ -586,29 +595,24 @@ updateData.addEventListener("click", async () => {
 refreshAll.addEventListener("click", refreshEveryStrategy);
 analyzeNumber.addEventListener("click", renderAnalysis);
 clearAnalysis.addEventListener("click", () => {
-  analysisInputs.forEach((input) => {
-    input.value = "";
-  });
+  analysisNumber.value = "";
   renderAnalysis();
-  analysisInputs[0]?.focus();
+  analysisNumber.focus();
 });
-analysisInputs.forEach((input, index) => {
-  input.addEventListener("input", () => {
-    input.value = input.value.replace(/\D/g, "").slice(0, 1);
-    if (input.value && index < analysisInputs.length - 1) {
-      analysisInputs[index + 1].focus();
-    }
+analysisNumber.addEventListener("input", () => {
+  analysisNumber.value = analysisNumber.value.replace(/\D/g, "").slice(0, 6);
+  renderAnalysis();
+});
+analysisNumber.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
     renderAnalysis();
-  });
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Backspace" && !input.value && index > 0) {
-      analysisInputs[index - 1].focus();
-    }
-  });
+  }
 });
 
 renderMeta();
 refreshEveryStrategy();
+renderAnalysisPreview();
 
 loadStats(false).catch((error) => {
   state.data = { ...state.data, updateError: error.message };

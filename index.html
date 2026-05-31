@@ -66,14 +66,11 @@
           <p>조를 제외한 숫자 6개를 입력하면 수집된 당첨번호 기준으로 흐름과 패턴을 간단히 분석합니다.</p>
         </div>
         <div class="analyzer-box">
-          <div id="analysisInputs" class="analysis-inputs" aria-label="분석할 숫자 6자리">
-            <input aria-label="첫 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
-            <input aria-label="두 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
-            <input aria-label="세 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
-            <input aria-label="네 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
-            <input aria-label="다섯 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
-            <input aria-label="여섯 번째 숫자" inputmode="numeric" maxlength="1" pattern="[0-9]">
+          <div class="analysis-entry">
+            <label for="analysisNumber">번호 6자리</label>
+            <input id="analysisNumber" aria-label="분석할 숫자 6자리" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="예: 547326">
           </div>
+          <div id="analysisPreview" class="analysis-preview" aria-label="입력한 숫자 미리보기"></div>
           <div class="analysis-actions">
             <button id="analyzeNumber" class="primary">분석하기</button>
             <button id="clearAnalysis">지우기</button>
